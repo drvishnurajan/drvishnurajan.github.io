@@ -129,4 +129,4 @@ The project is deployed via GitHub Pages.
 - **Deploy Command**: `npm run deploy` (Pushes to `master` branch)
 
 ---
-*Developed for Sahrdaya College of Engineering & Technology - CPS Department.*
+*Developed for Sahrdaya College of Engineering & Technology as a part of CPS Challenge 2026.*
