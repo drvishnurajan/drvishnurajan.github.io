@@ -41,13 +41,8 @@ export const SplashScreen = ({ onComplete }) => {
                     </p>
                 </div>
 
-                <div className="w-64 md:w-96 relative">
-                    <img
-                        src={`${import.meta.env.BASE_URL}full.png`}
-                        alt="Sahrdaya CPS"
-                        className="w-full h-auto object-contain drop-shadow-2xl"
-                    />
-                </div>
+                {/* Image moved to bottom */}
+                <div className="hidden"></div>
 
                 {/* Login or Loading State */}
                 <div className="h-16 flex items-center justify-center">
@@ -78,6 +73,32 @@ export const SplashScreen = ({ onComplete }) => {
                             <span className="text-xs font-bold uppercase tracking-wide">Welcome, {user.displayName}</span>
                         </div>
                     )}
+                </div>
+            </div>
+
+
+
+            {/* Bottom Infinite Scrolling Image Chain */}
+            <div className="absolute bottom-0 w-full overflow-hidden z-0">
+                <div className="flex w-max animate-scroll">
+                    {/* First set of images */}
+                    {[...Array(10)].map((_, i) => (
+                        <img
+                            key={`a-${i}`}
+                            src={`${import.meta.env.BASE_URL}full.png`}
+                            alt=""
+                            className="h-24 md:h-32 w-auto object-cover opacity-100 shrink-0"
+                        />
+                    ))}
+                    {/* Duplicate set for seamless loop */}
+                    {[...Array(10)].map((_, i) => (
+                        <img
+                            key={`b-${i}`}
+                            src={`${import.meta.env.BASE_URL}full.png`}
+                            alt=""
+                            className="h-24 md:h-32 w-auto object-cover opacity-100 shrink-0"
+                        />
+                    ))}
                 </div>
             </div>
         </div>
