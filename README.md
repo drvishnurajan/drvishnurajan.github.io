@@ -1,6 +1,6 @@
 # Gram Vista: Sahrdaya CPS Digital Twin Dashboard
 
-![Splash Screen](assets/screenshots/splash.png)
+![Dashboard Hero](assets/screenshots/dashboard.png)
 
 A state-of-the-art Digital Twin interface for monitoring and controlling Cyber-Physical Systems (CPS) such as smart energy grids, water networks, and environmental sensors. Built with React and powered by Firebase Realtime Database for sub-millisecond data synchronization.
 
@@ -106,11 +106,24 @@ if (Firebase.getString(firebaseData, "/assets/C-01/val")) {
 - **Hourly Load**: Real-time chart of power consumption.
 - **Active Alerts**: Scrollable list of systems reporting 'warning' or 'critical' status.
 
+### Live Monitoring
+![Live Monitoring](assets/screenshots/live_monitoring.png)
+- **Grid View**: Real-time status of all sensors with visual indicators.
+- **Detail View**: In-depth telemetry history and user tracking (Created/Modified By).
+
 ### City Map
+![City Map](assets/screenshots/map.png)
 Located in the sidebar, the Map View offers a full-screen geospatial perspective.
 - **Energy Layer**: Visualizes power infrastructure.
 - **Water Layer**: Visualizes tanks and pipes.
 - **System Controls**: Overlay panel to toggle system states while viewing their location.
+
+### System Configuration (Asset Management)
+![System Config](assets/screenshots/system_config.png)
+A dedicated interface for managing the digital twin assets.
+- **CRUD Operations**: Create, Read, Update, and Delete assets.
+- **Location Picker**: Integrated map to set asset coordinates.
+- **Mobile Responsive**: Optimized layout for mobile devices (Sidebar stacks on top).
 
 ---
 
@@ -129,4 +142,4 @@ The project is deployed via GitHub Pages.
 - **Deploy Command**: `npm run deploy` (Pushes to `master` branch)
 
 ---
-*Developed for Sahrdaya College of Engineering & Technology as a part of CPS Challenge 2026.*
+*Developed for Sahrdaya College of Engineering & Technology - CPS Department.*
