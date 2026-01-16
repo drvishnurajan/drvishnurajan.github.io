@@ -9,23 +9,35 @@ import {
     Activity
 } from 'lucide-react';
 
-const NavItem = ({ icon: Icon, label, active = false, onClick }) => (
+import { useAuth } from '../../context/AuthContext';
+
+const NavItem = ({ icon: Icon, label, active = false, onClick, disabled = false, title = '' }) => (
     <button
-        onClick={onClick}
+        onClick={disabled ? null : onClick}
+        title={title}
         className={`
       w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
       ${active
                 ? 'bg-blue-600/10 text-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.1)] border border-blue-200'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 hover:translate-x-1'}
+                : disabled
+                    ? 'opacity-50 cursor-not-allowed text-slate-400 bg-slate-50'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 hover:translate-x-1'}
     `}
     >
         <Icon size={20} className={active ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'} />
         <span className="font-medium tracking-wide text-sm">{label}</span>
         {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 shadow-[0_0_8px_currentColor]" />}
+        {disabled && (
+            <div className="ml-auto">
+                <span className="text-[10px] font-bold uppercase bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">Locked</span>
+            </div>
+        )}
     </button>
 );
 
 export const Sidebar = ({ activeView = 'dashboard', onNavigate, isOpen, onClose }) => {
+    const { isAdmin, user } = useAuth();
+
     return (
         <>
             {/* Mobile Overlay */}
@@ -61,16 +73,16 @@ export const Sidebar = ({ activeView = 'dashboard', onNavigate, isOpen, onClose 
                     <NavItem icon={MapIcon} label="City Map" active={activeView === 'map'} onClick={() => { onNavigate('map'); onClose?.(); }} />
                     <NavItem icon={Activity} label="Live Monitoring" active={activeView === 'live'} onClick={() => { onNavigate('live'); onClose?.(); }} />
 
-                    <div className="px-4 pb-2 pt-6 text-xs font-semibold text-slate-600 uppercase tracking-widest">Utilities</div>
-                    <NavItem icon={Zap} label="Energy Grid" active={activeView === 'energy'} onClick={() => { onNavigate('energy'); onClose?.(); }} />
-                    <NavItem icon={Droplets} label="Water System" active={activeView === 'water'} onClick={() => { onNavigate('water'); onClose?.(); }} />
-                    <NavItem icon={Settings} label="System Controls" active={activeView === 'controls'} onClick={() => { onNavigate('controls'); onClose?.(); }} />
-                    <NavItem icon={AlertTriangle} label="Incidents" active={activeView === 'incidents'} onClick={() => { onNavigate('incidents'); onClose?.(); }} />
+                    <div className="mt-8 px-4 pb-2 text-xs font-semibold text-slate-600 uppercase tracking-widest">System</div>
+                    <NavItem
+                        icon={Settings}
+                        label="Configuration"
+                        active={activeView === 'settings'}
+                        disabled={!isAdmin}
+                        title={!isAdmin ? "Admin access needed (sahrdaya.ac.in)" : ""}
+                        onClick={() => { if (isAdmin) { onNavigate('settings'); onClose?.(); } }}
+                    />
                 </nav>
-
-                <div className="p-4 border-t border-slate-200">
-                    <NavItem icon={Settings} label="System Config" active={activeView === 'settings'} onClick={() => { onNavigate('settings'); onClose?.(); }} />
-                </div>
             </aside>
         </>
     );

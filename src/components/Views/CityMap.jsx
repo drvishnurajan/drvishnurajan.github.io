@@ -10,7 +10,7 @@ export const CityMap = () => {
         <div className="relative w-full h-[calc(100vh-8rem)] bg-slate-100 rounded-3xl overflow-hidden border border-slate-200">
             {/* Map Component */}
             <div className="absolute inset-0 z-0">
-                <MapVisualizer activeLayer={activeLayer} />
+                <MapVisualizer activeLayer={activeLayer} showFilters={false} zoomControl={false} />
             </div>
 
             {/* Map Controls Overlay */}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { MapVisualizer } from '../Dashboard/MapVisualizer/MapVisualizer';
 import { SystemControls } from '../Dashboard/ControlPanel/SystemControls';
-import { Layers, Settings2 } from 'lucide-react';
+import { Layers } from 'lucide-react';
+import { useAssets } from '../../hooks/useAssets';
 
-export const FullMapView = ({ initialLayer = 'all', showControls = false }) => {
+export const FullMapView = ({ initialLayer = 'all', showControls = false, onNavigate }) => {
+    const { categories } = useAssets();
     const [activeLayer, setActiveLayer] = useState(initialLayer);
 
     // Update local state if prop changes (e.g. navigation)
@@ -11,11 +13,39 @@ export const FullMapView = ({ initialLayer = 'all', showControls = false }) => {
         setActiveLayer(initialLayer);
     }, [initialLayer]);
 
+    // Helper to get color for category
+    const getCategoryStyles = (cat) => {
+        switch (cat) {
+            case 'all': return 'bg-blue-100 text-blue-700';
+            case 'water': return 'bg-cyan-100 text-cyan-700';
+            case 'energy': return 'bg-yellow-100 text-yellow-700';
+            case 'controls': return 'bg-violet-100 text-violet-700';
+            case 'incidents': return 'bg-red-100 text-red-700';
+            default: return 'bg-slate-100 text-slate-700';
+        }
+    };
+
+    // Construct dynamic layers
+    const mapLayers = [
+        { id: 'all', label: 'All Assets', color: getCategoryStyles('all') },
+        ...(categories || []).map(cat => ({
+            id: cat,
+            label: cat.charAt(0).toUpperCase() + cat.slice(1),
+            color: getCategoryStyles(cat)
+        }))
+    ];
+
     return (
         <div className="relative w-full h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] bg-slate-100 rounded-2xl md:rounded-3xl overflow-hidden border border-slate-200">
             {/* Map Component */}
             <div className="absolute inset-0 z-0">
-                <MapVisualizer activeLayer={activeLayer} />
+                <MapVisualizer
+                    initialCategory={activeLayer}
+                    showFilters={false}
+                    zoomControl={true}
+                    interactive={true}
+                    onNavigate={onNavigate}
+                />
             </div>
 
             {/* Map Controls Overlay */}
@@ -26,13 +56,7 @@ export const FullMapView = ({ initialLayer = 'all', showControls = false }) => {
                         <Layers size={18} className="text-slate-600" />
                         <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Map Layers</span>
                     </div>
-                    {[
-                        { id: 'all', label: 'All Assets', color: 'bg-blue-100 text-blue-700' },
-                        { id: 'water', label: 'Water Network', color: 'bg-cyan-100 text-cyan-700' },
-                        { id: 'energy', label: 'Energy Grid', color: 'bg-yellow-100 text-yellow-700' },
-                        { id: 'controls', label: 'System Controls', color: 'bg-violet-100 text-violet-700' },
-                        { id: 'incidents', label: 'Incidents', color: 'bg-red-100 text-red-700' }
-                    ].map(layer => (
+                    {mapLayers.map(layer => (
                         <button
                             key={layer.id}
                             onClick={() => setActiveLayer(layer.id)}
@@ -43,8 +67,8 @@ export const FullMapView = ({ initialLayer = 'all', showControls = false }) => {
                     ))}
                 </div>
 
-                {/* System Controls Panel - Only show if specifically requested via prop or layer */}
-                {(showControls || activeLayer === 'controls') && (
+                {/* System Controls Panel - Only show if specifically requested via prop */}
+                {showControls && (
                     <div className="w-80">
                         <SystemControls />
                     </div>

@@ -1,21 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { User, Loader2 } from 'lucide-react';
 
 export const SplashScreen = ({ onComplete }) => {
-    const [isVisible, setIsVisible] = useState(true);
+    const { user, login, loading } = useAuth();
+    const [isExiting, setIsExiting] = useState(false);
+    const [loginError, setLoginError] = useState(null);
 
+    // Auto-proceed if already logged in
     useEffect(() => {
-        // Display for 2.5 seconds total
-        const timer = setTimeout(() => {
-            setIsVisible(false);
-            setTimeout(onComplete, 500); // Wait for fade out animation
-        }, 2500);
+        if (!loading && user) {
+            // Short delay to show branding before entering
+            const timer = setTimeout(() => {
+                setIsExiting(true);
+                setTimeout(onComplete, 500); // 500ms match transition duration
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [user, loading, onComplete]);
 
-        return () => clearTimeout(timer);
-    }, [onComplete]);
+    const handleLogin = async () => {
+        setLoginError(null);
+        try {
+            await login();
+        } catch (error) {
+            console.error(error);
+            setLoginError("Login failed. Please try again.");
+        }
+    };
 
     return (
-        <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-700">
+        <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`flex flex-col items-center gap-8 duration-700 ${isExiting ? 'scale-110' : 'animate-in fade-in zoom-in'}`}>
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight">
                         Gram Vista
@@ -31,6 +47,37 @@ export const SplashScreen = ({ onComplete }) => {
                         alt="Sahrdaya CPS"
                         className="w-full h-auto object-contain drop-shadow-2xl"
                     />
+                </div>
+
+                {/* Login or Loading State */}
+                <div className="h-16 flex items-center justify-center">
+                    {loading ? (
+                        <div className="flex flex-col items-center gap-2 text-slate-400">
+                            <Loader2 size={24} className="animate-spin" />
+                            <span className="text-xs font-semibold uppercase tracking-wide">Initializing...</span>
+                        </div>
+                    ) : !user ? (
+                        <div className="flex flex-col items-center gap-3 animate-in slide-in-from-bottom-4 fade-in duration-500">
+                            <button
+                                onClick={handleLogin}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                            >
+                                <User size={20} />
+                                Sign In with Google
+                            </button>
+                            {loginError && (
+                                <p className="text-red-500 text-sm font-medium">{loginError}</p>
+                            )}
+                            <p className="text-xs text-slate-400">Restricted Access • Authorized Personnel Only</p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-2 text-green-600 animate-in fade-in zoom-in">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <User size={16} />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wide">Welcome, {user.displayName}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

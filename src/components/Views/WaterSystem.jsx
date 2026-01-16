@@ -13,12 +13,12 @@ const tankData = [
 ];
 
 const flowData = [
-    { time: '06:00', flow: 120 },
-    { time: '09:00', flow: 450 },
-    { time: '12:00', flow: 380 },
-    { time: '15:00', flow: 200 },
-    { time: '18:00', flow: 500 },
-    { time: '21:00', flow: 300 },
+    { time: '14 Jan 2026 6:00 AM', flow: 120 },
+    { time: '14 Jan 2026 9:00 AM', flow: 450 },
+    { time: '14 Jan 2026 12:00 PM', flow: 380 },
+    { time: '14 Jan 2026 3:00 PM', flow: 200 },
+    { time: '14 Jan 2026 6:00 PM', flow: 500 },
+    { time: '14 Jan 2026 9:00 PM', flow: 300 },
 ];
 
 const QualityCard = ({ label, value, unit, status }) => (

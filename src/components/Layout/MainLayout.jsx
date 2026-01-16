@@ -3,7 +3,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
-export const MainLayout = ({ children, activeView, setActiveView }) => {
+export const MainLayout = ({ children, activeView, setActiveView, onNavigate }) => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
     return (
@@ -16,14 +16,14 @@ export const MainLayout = ({ children, activeView, setActiveView }) => {
 
             <Sidebar
                 activeView={activeView}
-                onNavigate={setActiveView}
+                onNavigate={onNavigate}
                 isOpen={isMobileSidebarOpen}
                 onClose={() => setIsMobileSidebarOpen(false)}
             />
 
             <div className="flex flex-col flex-1 relative z-10 w-0"> {/* w-0 to allow flex shrinking properly */}
                 <Header
-                    onNavigate={setActiveView}
+                    onNavigate={onNavigate}
                     onMenuClick={() => setIsMobileSidebarOpen(true)}
                 />
                 <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 relative">

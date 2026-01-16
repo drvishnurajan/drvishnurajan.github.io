@@ -18,3 +18,8 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Realtime Database and export it
 export const db = getDatabase(app);
+
+// Initialize Auth
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();

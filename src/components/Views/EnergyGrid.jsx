@@ -5,17 +5,17 @@ import { Zap, Activity, Battery, Sun } from 'lucide-react';
 import { DashboardCard } from '../Shared/DashboardCard';
 
 const loadData = [
-    { time: '00:00', load: 320, solar: 0 },
-    { time: '04:00', load: 280, solar: 0 },
-    { time: '06:00', load: 350, solar: 50 },
-    { time: '08:00', load: 550, solar: 200 },
-    { time: '10:00', load: 700, solar: 450 },
-    { time: '12:00', load: 750, solar: 600 },
-    { time: '14:00', load: 720, solar: 580 },
-    { time: '16:00', load: 600, solar: 350 },
-    { time: '18:00', load: 500, solar: 50 },
-    { time: '20:00', load: 480, solar: 0 },
-    { time: '22:00', load: 400, solar: 0 },
+    { time: '14 Jan 2026 12:00 AM', load: 320, solar: 0 },
+    { time: '14 Jan 2026 4:00 AM', load: 280, solar: 0 },
+    { time: '14 Jan 2026 6:00 AM', load: 350, solar: 50 },
+    { time: '14 Jan 2026 8:00 AM', load: 550, solar: 200 },
+    { time: '14 Jan 2026 10:00 AM', load: 700, solar: 450 },
+    { time: '14 Jan 2026 12:00 PM', load: 750, solar: 600 },
+    { time: '14 Jan 2026 2:00 PM', load: 720, solar: 580 },
+    { time: '14 Jan 2026 4:00 PM', load: 600, solar: 350 },
+    { time: '14 Jan 2026 6:00 PM', load: 500, solar: 50 },
+    { time: '14 Jan 2026 8:00 PM', load: 480, solar: 0 },
+    { time: '14 Jan 2026 10:00 PM', load: 400, solar: 0 },
 ];
 
 const sourceData = [

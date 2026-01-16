@@ -1,14 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Bell, User, MapPin, AlertCircle, Menu } from 'lucide-react';
 import { useAssets } from '../../hooks/useAssets';
+import { useAuth } from '../../context/AuthContext';
 
 export const Header = ({ onNavigate, onMenuClick }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showNotifications, setShowNotifications] = useState(false);
     const { assets } = useAssets();
+    const { user, login, logout } = useAuth();
+    const [imgError, setImgError] = useState(false);
     const notificationRef = useRef(null);
 
-    // Filter assets for search
+    // Reset image error when user changes
+    useEffect(() => {
+        setImgError(false);
+    }, [user]);
+
+
     const searchResults = searchQuery.length > 0
         ? assets.filter(asset =>
             asset.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -19,9 +27,11 @@ export const Header = ({ onNavigate, onMenuClick }) => {
     // Filter assets for notifications (Critical/Warning)
     const notifications = assets.filter(asset => asset.status === 'critical' || asset.status === 'warning');
 
-    const handleSearchSelect = () => {
+    const handleSearchSelect = (asset) => {
         setSearchQuery('');
-        if (onNavigate) onNavigate('map');
+        if (onNavigate) {
+            onNavigate('live', { assetId: asset.id });
+        }
     };
 
     // Click outside to close notifications
@@ -52,7 +62,9 @@ export const Header = ({ onNavigate, onMenuClick }) => {
                 {/* Breadcrumbs or Title */}
                 <div>
                     <h2 className="text-xl md:text-2xl font-semibold text-slate-800 tracking-tight">Overview</h2>
-                    <p className="hidden md:block text-sm text-slate-500">Welcome back, Vishnu Rajan</p>
+                    <p className="hidden md:block text-sm text-slate-500 truncate max-w-[200px] lg:max-w-xs" title={`Welcome back, ${user?.displayName || 'User'}`}>
+                        Welcome back, {user?.displayName || 'User'}
+                    </p>
                 </div>
             </div>
 
@@ -75,7 +87,8 @@ export const Header = ({ onNavigate, onMenuClick }) => {
                                 searchResults.map(asset => (
                                     <button
                                         key={asset.id}
-                                        onClick={handleSearchSelect}
+                                        onClick={() => handleSearchSelect(asset)}
+
                                         className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-start gap-3 border-b border-slate-50 last:border-0"
                                     >
                                         <div className={`p-2 rounded-lg ${asset.category === 'energy' ? 'bg-amber-100 text-amber-600' :
@@ -121,8 +134,17 @@ export const Header = ({ onNavigate, onMenuClick }) => {
                                 <div className="max-h-[300px] overflow-y-auto">
                                     {notifications.length > 0 ? (
                                         notifications.map(note => (
-                                            <div key={note.id} className="px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex gap-3">
-                                                <div className="mt-0.5 text-red-500">
+                                            <button
+                                                key={note.id}
+                                                onClick={() => {
+                                                    setShowNotifications(false);
+                                                    if (onNavigate) {
+                                                        onNavigate('live', { assetId: note.id });
+                                                    }
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex gap-3 transition-colors"
+                                            >
+                                                <div className="mt-0.5 text-red-500 shrink-0">
                                                     <AlertCircle size={16} />
                                                 </div>
                                                 <div>
@@ -130,7 +152,7 @@ export const Header = ({ onNavigate, onMenuClick }) => {
                                                     <p className="text-xs text-slate-500">{note.details}</p>
                                                     <p className="text-[10px] uppercase font-bold text-red-500 mt-1">{note.status} Alert</p>
                                                 </div>
-                                            </div>
+                                            </button>
                                         ))
                                     ) : (
                                         <div className="px-4 py-8 text-center text-sm text-slate-500">
@@ -142,18 +164,50 @@ export const Header = ({ onNavigate, onMenuClick }) => {
                         )}
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
-                            <User size={18} />
+                    {/* Login / Actions */}
+                    {user ? (
+                        <div className="flex items-center gap-3">
+                            {user.photoURL && !imgError ? (
+                                <img
+                                    src={user.photoURL}
+                                    alt="User"
+                                    className="w-9 h-9 rounded-full border border-slate-200"
+                                    onError={() => setImgError(true)}
+                                />
+                            ) : (
+                                <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
+                                    <User size={18} />
+                                </div>
+                            )}
+                            <div className="hidden md:block">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium text-slate-700">{user.displayName || 'User'}</p>
+                                    {user.email === 'vishnurajanme@gmail.com' && (
+                                        <span className="text-[9px] font-bold bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded border border-purple-200 uppercase tracking-wide">
+                                            Super Admin
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={logout}
+                                        className="text-[10px] text-red-500 hover:text-red-600 font-semibold border border-red-100 px-1.5 py-0.5 rounded hover:bg-red-50"
+                                    >
+                                        LOGOUT
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-400">{user.email}</p>
+                            </div>
                         </div>
-                        <div className="hidden md:block">
-                            <p className="text-sm font-medium text-slate-700">Vishnu Rajan</p>
-                            <p className="text-xs text-slate-400">Super Admin</p>
-                        </div>
-                    </div>
+                    ) : (
+                        <button
+                            onClick={login}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <User size={16} /> Login
+                        </button>
+                    )}
                 </div>
             </div>
-        </header>
+        </header >
     );
 };
 
