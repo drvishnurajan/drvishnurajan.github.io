@@ -81,22 +81,22 @@ export const SplashScreen = ({ onComplete }) => {
             {/* Bottom Infinite Scrolling Image Chain */}
             <div className="absolute bottom-0 w-full overflow-hidden z-0">
                 <div className="flex w-max animate-scroll">
-                    {/* First set of images */}
-                    {[...Array(10)].map((_, i) => (
+                    {/* First set of images - Continuous Chain */}
+                    {[...Array(20)].map((_, i) => (
                         <img
                             key={`a-${i}`}
                             src={`${import.meta.env.BASE_URL}full.png`}
                             alt=""
-                            className="h-24 md:h-32 w-auto object-cover opacity-100 shrink-0"
+                            className="h-10 md:h-14 w-auto object-contain opacity-100 shrink-0"
                         />
                     ))}
                     {/* Duplicate set for seamless loop */}
-                    {[...Array(10)].map((_, i) => (
+                    {[...Array(20)].map((_, i) => (
                         <img
                             key={`b-${i}`}
                             src={`${import.meta.env.BASE_URL}full.png`}
                             alt=""
-                            className="h-24 md:h-32 w-auto object-cover opacity-100 shrink-0"
+                            className="h-10 md:h-14 w-auto object-contain opacity-100 shrink-0"
                         />
                     ))}
                 </div>
