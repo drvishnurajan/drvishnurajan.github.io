@@ -481,25 +481,47 @@ export const AgricultureDashboard = () => {
 
                     {predictionResult?.prediction ? (
                         <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="rounded-xl border border-green-200 bg-green-50 p-4 lg:col-span-1">
-                                <p className="text-xs uppercase tracking-wider text-green-700 font-semibold">Top prediction</p>
-                                <p className="mt-2 text-lg font-bold text-green-900">{predictionResult.prediction.class_name}</p>
-                                <p className="mt-1 text-sm text-green-800">
-                                    Confidence: {(Number(predictionResult.prediction.confidence || 0) * 100).toFixed(2)}%
-                                </p>
-                            </div>
+                                            <div className={`rounded-xl p-4 lg:col-span-1 border ${predictionResult.rejected ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
+                                                <p className={`text-xs uppercase tracking-wider font-semibold ${predictionResult.rejected ? 'text-amber-700' : 'text-green-700'}`}>
+                                                    {predictionResult.rejected ? 'Rejection notice' : 'Top prediction'}
+                                                </p>
+                                                <p className={`mt-2 text-lg font-bold ${predictionResult.rejected ? 'text-amber-900' : 'text-green-900'}`}>
+                                                    {predictionResult.prediction.class_name}
+                                                </p>
+                                                <p className={`mt-1 text-sm ${predictionResult.rejected ? 'text-amber-800' : 'text-green-800'}`}>
+                                                    Confidence: {(Number(predictionResult.prediction.confidence || 0) * 100).toFixed(2)}%
+                                                </p>
+                                                {predictionResult.rejected ? (
+                                                    <p className="mt-2 text-sm text-amber-800">
+                                                        We could not detect a clear leaf in this image. Please upload a clearer leaf photo.
+                                                    </p>
+                                                ) : null}
+                                                {predictionResult.reject_reason ? (
+                                                    <p className="mt-2 text-xs text-amber-700 font-semibold uppercase tracking-wider">
+                                                        Reject reason: {predictionResult.reject_reason}
+                                                    </p>
+                                                ) : null}
+                                            </div>
 
-                            <div className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
-                                <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Top 3 predictions</p>
-                                <div className="mt-3 space-y-2">
-                                    {predictionResult.top3.map((entry, idx) => (
-                                        <div key={`${entry.class_index}-${idx}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                            <span className="text-sm font-medium text-slate-800">{entry.class_name}</span>
-                                            <span className="text-sm font-bold text-slate-700">{(Number(entry.confidence || 0) * 100).toFixed(2)}%</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                            {!predictionResult.rejected ? (
+                                                <div className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
+                                                    <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Top 3 predictions</p>
+                                                    {Array.isArray(predictionResult.top3) && predictionResult.top3.length > 0 ? (
+                                                        <div className="mt-3 space-y-2">
+                                                            {predictionResult.top3.map((entry, idx) => (
+                                                                <div key={`${entry.class_index}-${idx}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                                                    <span className="text-sm font-medium text-slate-800">{entry.class_name}</span>
+                                                                    <span className="text-sm font-bold text-slate-700">{(Number(entry.confidence || 0) * 100).toFixed(2)}%</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                                                            No alternative classes returned.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : null}
                         </div>
                     ) : null}
                 </div>
