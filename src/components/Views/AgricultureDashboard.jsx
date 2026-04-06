@@ -48,6 +48,48 @@ const CLASS_DESCRIPTIONS = {
     'No leaf detected': 'The model could not detect a clear leaf region. Capture a sharper leaf-focused image with better lighting and less background clutter.'
 };
 
+const CLASS_SOLUTIONS = {
+    'Apple___Apple_scab': 'Prune infected leaves, improve airflow, and apply a protective fungicide schedule during wet periods.',
+    'Apple___Black_rot': 'Remove infected fruit and twigs, sanitize fallen debris, and apply a rot-targeted fungicide program.',
+    'Apple___Cedar_apple_rust': 'Prune nearby alternate hosts where possible and apply rust-management fungicide at early symptom stages.',
+    'Apple___healthy': 'Continue routine monitoring, balanced irrigation, and preventive canopy sanitation practices.',
+    'Blueberry___healthy': 'Maintain current crop hygiene, monitor moisture, and continue preventive scouting.',
+    'Cherry___healthy': 'Keep regular monitoring and balanced nutrition to preserve current healthy status.',
+    'Cherry___Powdery_mildew': 'Reduce humidity around canopy, remove heavily affected tissue, and use mildew-targeted fungicide if needed.',
+    'Corn___Cercospora_leaf_spot Gray_leaf_spot': 'Rotate crops, reduce residue carryover, and apply leaf-spot fungicide at economic threshold.',
+    'Corn___Common_rust': 'Scout upper canopy, prioritize resistant hybrids next cycle, and apply rust fungicide under active spread.',
+    'Corn___healthy': 'Maintain standard agronomic care and continue periodic disease scouting.',
+    'Corn___Northern_Leaf_Blight': 'Use resistant varieties where possible, manage residue, and apply blight fungicide at early spread.',
+    'Grape___Black_rot': 'Remove infected clusters, open canopy with pruning, and apply timely fungicide during rainy windows.',
+    'Grape___Esca_(Black_Measles)': 'Remove severely affected wood, reduce vine stress, and follow a long-term trunk-disease management plan.',
+    'Grape___healthy': 'Continue canopy ventilation, sanitation, and periodic disease checks.',
+    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)': 'Trim infected leaves, improve air circulation, and deploy blight-directed fungicide when conditions persist.',
+    'Orange___Haunglongbing_(Citrus_greening)': 'Isolate suspected plants, control vectors aggressively, and consult local extension for integrated HLB management.',
+    'Peach___Bacterial_spot': 'Avoid overhead splash, remove heavily infected tissue, and use bactericide strategy as locally recommended.',
+    'Peach___healthy': 'Maintain preventive sprays and orchard sanitation while continuing routine scouting.',
+    'Pepper,_bell___Bacterial_spot': 'Remove infected leaves, avoid leaf wetness during irrigation, and apply copper-based bactericide if advised.',
+    'Pepper,_bell___healthy': 'Continue regular monitoring and keep foliage dry to reduce bacterial risk.',
+    'Potato___Early_blight': 'Remove infected foliage, maintain nutrition balance, and apply early blight fungicide in a rotation plan.',
+    'Potato___healthy': 'Keep routine monitoring, proper spacing, and preventive disease hygiene.',
+    'Potato___Late_blight': 'Act immediately with late blight protocol: isolate affected rows and apply recommended protective + curative fungicide.',
+    'Raspberry___healthy': 'Maintain current crop health program and continue periodic visual checks.',
+    'Soybean___healthy': 'Continue standard field management and regular preventive scouting.',
+    'Squash___Powdery_mildew': 'Reduce canopy humidity, remove affected leaves, and apply mildew fungicide as per local guidance.',
+    'Strawberry___healthy': 'Maintain drip-based watering and keep canopy dry with regular sanitation.',
+    'Strawberry___Leaf_scorch': 'Remove scorched leaves, optimize watering schedule, and follow targeted fungicidal protection if spread continues.',
+    'Tomato___Bacterial_spot': 'Minimize splash irrigation, remove symptomatic leaves, and use bactericide/copper program with rotation.',
+    'Tomato___Early_blight': 'Prune lower infected leaves, mulch soil splash zones, and apply early blight fungicide early.',
+    'Tomato___healthy': 'Maintain current preventive schedule, spacing, and frequent scouting.',
+    'Tomato___Late_blight': 'Initiate urgent blight control, isolate infected plants, and apply late blight fungicide immediately.',
+    'Tomato___Leaf_Mold': 'Increase ventilation, reduce leaf wetness duration, and use leaf-mold fungicide where necessary.',
+    'Tomato___Septoria_leaf_spot': 'Remove affected leaves, avoid overhead watering, and apply septoria-targeted fungicide in intervals.',
+    'Tomato___Spider_mites Two-spotted_spider_mite': 'Lower plant stress, wash undersides where feasible, and apply miticide/biocontrol strategy as advised.',
+    'Tomato___Target_Spot': 'Remove infected foliage, improve airflow, and apply target-spot fungicide under persistent risk.',
+    'Tomato___Tomato_mosaic_virus': 'Rogue infected plants, disinfect tools/hands, and reduce mechanical transmission sources.',
+    'Tomato___Tomato_Yellow_Leaf_Curl_Virus': 'Control whitefly vectors, remove severely infected plants, and prioritize tolerant varieties.',
+    'No leaf detected': 'Retake the image with a close, well-lit, single-leaf frame and minimal background clutter before re-analyzing.'
+};
+
 const prettifyClassName = (raw = '') => {
     const [cropPart = '', diseasePart = raw] = String(raw).split('___');
     const cropName = cropPart.replace(/,_/g, ' ').replace(/_/g, ' ').trim();
@@ -538,6 +580,7 @@ export const AgricultureDashboard = () => {
                                                     const topClass = predictionResult.prediction.class_name;
                                                     const { cropName, diseaseName } = prettifyClassName(topClass);
                                                     const description = CLASS_DESCRIPTIONS[topClass] || 'Prediction generated by the vision model for this uploaded sample.';
+                                                    const solution = CLASS_SOLUTIONS[topClass] || 'Continue monitoring and follow local agronomy guidelines.';
 
                                                     return (
                                                         <>
@@ -558,6 +601,10 @@ export const AgricultureDashboard = () => {
                                                             <p className={`mt-2 text-sm ${predictionResult.rejected ? 'text-amber-800' : 'text-slate-700'}`}>
                                                                 {description}
                                                             </p>
+                                                            <div className={`mt-2 rounded-lg border px-3 py-2 text-sm ${predictionResult.rejected ? 'border-amber-200 bg-amber-100/50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}>
+                                                                <span className="font-semibold">Recommended solution: </span>
+                                                                {solution}
+                                                            </div>
                                                             {predictionResult.rejected ? (
                                                                 <p className="mt-2 text-sm text-amber-800">
                                                                     We could not detect a clear leaf in this image. Please upload a clearer leaf photo.
