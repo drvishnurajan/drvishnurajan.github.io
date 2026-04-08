@@ -2,7 +2,7 @@
 
 ![Dashboard Hero](assets/screenshots/dashboard.png)
 
-A state-of-the-art Digital Twin interface for monitoring and controlling Cyber-Physical Systems (CPS) such as smart energy grids, water networks, and environmental sensors. Built with React and powered by Firebase Realtime Database for sub-millisecond data synchronization.
+A state-of-the-art Digital Twin interface for monitoring and controlling Cyber-Physical Systems (CPS) such as smart energy grids, water networks, and environmental sensors. Built with React and powered by Firebase Realtime Database for sub-millisecond data synchronization..
 
 **Live Demo**: [https://drvishnurajan.github.io/cps/](https://drvishnurajan.github.io/cps/)
 
