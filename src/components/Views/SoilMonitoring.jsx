@@ -206,7 +206,7 @@ export const SoilMonitoring = () => {
     const [reading, setReading] = useState(generateReading);
     const [history, setHistory] = useState([]);
     const [isRunning, setIsRunning] = useState(true);
-    const [dataSource, setDataSource] = useState('simulate'); // 'simulate' | 'firebase'
+    const [dataSource, setDataSource] = useState('firebase'); // 'simulate' | 'firebase'
     const [fbConnected, setFbConnected] = useState(false);
     const [pumpOn, setPumpOn] = useState(false);
     const intervalRef = useRef(null);
