@@ -203,7 +203,7 @@ const StatusBadge = ({ status, color }) => {
 // ── Main Component ──────────────────────────────────────────────────────────
 
 export const SoilMonitoring = () => {
-    const [reading, setReading] = useState(generateReading);
+    const [reading, setReading] = useState(() => normalizeReading({}));
     const [history, setHistory] = useState([]);
     const [isRunning, setIsRunning] = useState(true);
     const [dataSource, setDataSource] = useState('firebase'); // 'simulate' | 'firebase'
@@ -267,6 +267,11 @@ export const SoilMonitoring = () => {
                 });
                 setFbConnected(true);
             } else {
+                const emptyReading = normalizeReading({});
+                setReading(emptyReading);
+                latestReadingRef.current = emptyReading;
+                setPumpOn(false);
+                setHistory([]);
                 setFbConnected(false);
             }
         }, () => setFbConnected(false));
