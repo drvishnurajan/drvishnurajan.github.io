@@ -11,7 +11,7 @@ import {
 import { DashboardCard } from '../Shared/DashboardCard';
 import { DemoEncryptionNotice } from '../Shared/DemoEncryptionNotice';
 import { db } from '../../firebase.config';
-import { ref, onValue, push, set, remove, query, limitToLast, serverTimestamp, update } from 'firebase/database';
+import { ref, onValue, set, remove, update } from 'firebase/database';
 
 // ── Trained Linear Regression Coefficients (from Python model) ──────────────
 const MODEL_COEFFICIENTS = {
@@ -29,7 +29,6 @@ const THRESHOLD = 5;
 
 // ── Firebase paths ──────────────────────────────────────────────────────────
 const FB_LATEST = 'soil_monitoring/latest';
-const FB_HISTORY = 'soil_monitoring/history';
 
 // ── Sensor value ranges ─────────────────────────────────────────────────────
 const SENSOR_RANGES = {
@@ -72,28 +71,35 @@ const buildCapacitiveMonitors = (baseValue) => {
 };
 
 const normalizeReading = (payload = {}) => {
-    const next = { ...payload };
-    const capNode = payload?.Soil_Moisture_Capacitive;
+    const getValue = (key) => {
+        if (payload?.[key] !== undefined) return payload[key];
+        if (payload?.[`${key}.json`] !== undefined) return payload[`${key}.json`];
+        return undefined;
+    };
 
-    if (capNode && typeof capNode === 'object') {
-        const m1 = toNumberOr(capNode.monitor_1, 0);
-        const m2 = toNumberOr(capNode.monitor_2, 0);
-        const m3 = toNumberOr(capNode.monitor_3, 0);
-        const avg = toNumberOr(capNode.average, (m1 + m2 + m3) / 3);
+    const m1 = toNumberOr(getValue('soil_moisture_1'), 0);
+    const m2 = toNumberOr(getValue('soil_moisture_2'), m1);
+    const m3 = toNumberOr(getValue('soil_moisture_3'), m1);
+    const avg = Math.round(((m1 + m2 + m3) / 3) * 10) / 10;
+    const temperature = toNumberOr(getValue('temperature'), 0);
+    const humidity = toNumberOr(getValue('humidity'), 0);
 
-        next.Soil_Moisture_Capacitive_M1 = m1;
-        next.Soil_Moisture_Capacitive_M2 = m2;
-        next.Soil_Moisture_Capacitive_M3 = m3;
-        next.Soil_Moisture_Capacitive = Math.round(avg * 10) / 10;
-        return next;
-    }
+    const mappedAnalog = 900 - (avg - 15) * (600 / 70);
 
-    const cap = toNumberOr(payload?.Soil_Moisture_Capacitive, 0);
-    next.Soil_Moisture_Capacitive = cap;
-    next.Soil_Moisture_Capacitive_M1 = toNumberOr(payload?.Soil_Moisture_Capacitive_M1, cap);
-    next.Soil_Moisture_Capacitive_M2 = toNumberOr(payload?.Soil_Moisture_Capacitive_M2, cap);
-    next.Soil_Moisture_Capacitive_M3 = toNumberOr(payload?.Soil_Moisture_Capacitive_M3, cap);
-    return next;
+    return {
+        Nitrogen: toNumberOr(getValue('nitrogen'), 0),
+        Phosphorus: toNumberOr(getValue('phosphorus'), 0),
+        Potassium: toNumberOr(getValue('potassium'), 0),
+        Soil_Temperature: temperature,
+        Air_Temperature: temperature,
+        Air_Humidity: humidity,
+        Soil_Moisture_Capacitive_M1: m1,
+        Soil_Moisture_Capacitive_M2: m2,
+        Soil_Moisture_Capacitive_M3: m3,
+        Soil_Moisture_Capacitive: avg,
+        Analog_Moisture_Value: Math.round(clamp(mappedAnalog, 300, 900)),
+        pump: String(getValue('pump') ?? 'off').toLowerCase(),
+    };
 };
 
 const generateReading = (previous = null) => {
@@ -216,28 +222,20 @@ export const SoilMonitoring = () => {
         pumpOnRef.current = pumpOn;
     }, [pumpOn]);
 
-    // ── Push a reading + prediction to Firebase ─────────────────────────────
-    const pushToFirebase = useCallback((sensorData, ideal, current, info) => {
-        const entry = {
-            ...sensorData,
-            Soil_Moisture_Capacitive: {
-                monitor_1: toNumberOr(sensorData.Soil_Moisture_Capacitive_M1, sensorData.Soil_Moisture_Capacitive),
-                monitor_2: toNumberOr(sensorData.Soil_Moisture_Capacitive_M2, sensorData.Soil_Moisture_Capacitive),
-                monitor_3: toNumberOr(sensorData.Soil_Moisture_Capacitive_M3, sensorData.Soil_Moisture_Capacitive),
-                average: toNumberOr(sensorData.Soil_Moisture_Capacitive, 0),
-            },
-            ideal_moisture: ideal,
-            current_moisture: current,
-            status: info.status,
-            recommendation: info.recommendation,
-            pump_status: pumpOnRef.current ? 'on' : 'off',
-            time: timeLabel(),
-            timestamp: Date.now(),
+    // ── Push latest sensor values to Firebase (new flat schema) ─────────────
+    const pushToFirebase = useCallback((sensorData) => {
+        const latestPayload = {
+            soil_moisture_1: toNumberOr(sensorData.Soil_Moisture_Capacitive_M1, sensorData.Soil_Moisture_Capacitive),
+            soil_moisture_2: toNumberOr(sensorData.Soil_Moisture_Capacitive_M2, sensorData.Soil_Moisture_Capacitive),
+            soil_moisture_3: toNumberOr(sensorData.Soil_Moisture_Capacitive_M3, sensorData.Soil_Moisture_Capacitive),
+            nitrogen: toNumberOr(sensorData.Nitrogen, 0),
+            phosphorus: toNumberOr(sensorData.Phosphorus, 0),
+            potassium: toNumberOr(sensorData.Potassium, 0),
+            temperature: toNumberOr(sensorData.Soil_Temperature, 0),
+            humidity: toNumberOr(sensorData.Air_Humidity, 0),
+            pump: pumpOnRef.current ? 'on' : 'off',
         };
-        // Write latest reading
-        set(ref(db, FB_LATEST), entry).catch(console.error);
-        // Push to history
-        push(ref(db, FB_HISTORY), entry).catch(console.error);
+        set(ref(db, FB_LATEST), latestPayload).catch(console.error);
     }, []);
 
     // ── Simulated tick ──────────────────────────────────────────────────────
@@ -253,7 +251,7 @@ export const SoilMonitoring = () => {
             return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
         });
         // Also push to Firebase so data is persisted
-        pushToFirebase(newReading, ideal, current, info);
+        pushToFirebase(newReading);
     }, [pushToFirebase]);
 
     // ── Simulation interval ─────────────────────────────────────────────────
@@ -270,7 +268,6 @@ export const SoilMonitoring = () => {
     useEffect(() => {
         if (dataSource !== 'firebase') return;
 
-        // Listen to latest reading
         const latestRef = ref(db, FB_LATEST);
         const unsubLatest = onValue(latestRef, (snap) => {
             const data = snap.val();
@@ -278,38 +275,25 @@ export const SoilMonitoring = () => {
                 const normalized = normalizeReading(data);
                 setReading(normalized);
                 latestReadingRef.current = normalized;
-                if (typeof data.pump_status === 'string') {
-                    setPumpOn(data.pump_status.toLowerCase() === 'on');
-                }
+                setPumpOn(normalized.pump === 'on');
+                const idealValue = predict(normalized);
+                const currentValue = normalized.Soil_Moisture_Capacitive;
+                const info = classify(currentValue, idealValue);
+                setHistory(prev => {
+                    const next = [...prev, { time: timeLabel(), current: currentValue, ideal: idealValue, status: info.status }];
+                    return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
+                });
                 setFbConnected(true);
+            } else {
+                setFbConnected(false);
             }
         }, () => setFbConnected(false));
 
-        // Listen to last N history entries
-        const historyQuery = query(ref(db, FB_HISTORY), limitToLast(MAX_HISTORY));
-        const unsubHistory = onValue(historyQuery, (snap) => {
-            const data = snap.val();
-            if (data) {
-                const entries = Object.values(data)
-                    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-                    .map(e => ({
-                        time: e.time || '',
-                        current: e.current_moisture
-                            ?? (typeof e.Soil_Moisture_Capacitive === 'object' ? e.Soil_Moisture_Capacitive.average : e.Soil_Moisture_Capacitive)
-                            ?? e.Soil_Moisture_NPK,
-                        ideal: e.ideal_moisture,
-                        status: e.status,
-                    }));
-                setHistory(entries.slice(-MAX_HISTORY));
-            }
-        });
-
-        return () => { unsubLatest(); unsubHistory(); };
+        return () => { unsubLatest(); };
     }, [dataSource]);
 
-    // ── Clear Firebase history ──────────────────────────────────────────────
+    // ── Clear latest data + local chart history ─────────────────────────────
     const clearHistory = () => {
-        remove(ref(db, FB_HISTORY)).catch(console.error);
         remove(ref(db, FB_LATEST)).catch(console.error);
         setHistory([]);
     };
@@ -320,9 +304,7 @@ export const SoilMonitoring = () => {
         pumpOnRef.current = next;
         try {
             await update(ref(db, FB_LATEST), {
-                pump_status: next ? 'on' : 'off',
-                pump_status_time: timeLabel(),
-                pump_updatedAt: serverTimestamp(),
+                pump: next ? 'on' : 'off',
             });
         } catch (err) {
             setPumpOn(!next);
@@ -332,10 +314,11 @@ export const SoilMonitoring = () => {
     };
 
     const ideal = predict(reading);
-    const current = reading.Soil_Moisture_Capacitive ?? reading.current_moisture ?? reading.Soil_Moisture_NPK ?? 0;
+    const current = reading.Soil_Moisture_Capacitive ?? 0;
     const cap1 = reading.Soil_Moisture_Capacitive_M1 ?? current;
     const cap2 = reading.Soil_Moisture_Capacitive_M2 ?? current;
     const cap3 = reading.Soil_Moisture_Capacitive_M3 ?? current;
+    const avgMoisture = Math.round(((cap1 + cap2 + cap3) / 3) * 10) / 10;
     const { status, color, recommendation } = classify(current, ideal);
 
     // Nutrient bar chart data
@@ -355,7 +338,7 @@ export const SoilMonitoring = () => {
                         Smart Soil Monitoring
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">
-                        Linear Regression prediction • {dataSource === 'firebase' ? 'Firebase Realtime' : 'Simulated'} data
+                        Latest schema • {dataSource === 'firebase' ? 'Firebase Realtime' : 'Simulated'} data
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -411,7 +394,7 @@ export const SoilMonitoring = () => {
                     <button
                         onClick={clearHistory}
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-slate-50 text-slate-400 border border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm"
-                        title="Clear Firebase history"
+                        title="Clear latest data"
                     >
                         <Trash2 size={14} />
                     </button>
@@ -443,7 +426,7 @@ export const SoilMonitoring = () => {
                     <div className="flex items-center gap-4">
                         <StatusBadge status={status} color={color} />
                         <div>
-                            <p className="text-sm font-semibold text-slate-700">Current: <span className="text-lg">{current}%</span></p>
+                            <p className="text-sm font-semibold text-slate-700">Average moisture: <span className="text-lg">{avgMoisture}%</span></p>
                             <p className="text-sm text-slate-500">Predicted Ideal: <span className="font-semibold text-slate-700">{ideal}%</span></p>
                         </div>
                     </div>
@@ -453,21 +436,21 @@ export const SoilMonitoring = () => {
 
             {/* Sensor Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <SensorCard icon={FlaskConical} label="Nitrogen" value={reading.Nitrogen} unit="mg/kg" color="green" />
-                <SensorCard icon={FlaskConical} label="Phosphorus" value={reading.Phosphorus} unit="mg/kg" color="blue" />
-                <SensorCard icon={FlaskConical} label="Potassium" value={reading.Potassium} unit="mg/kg" color="purple" />
-                <SensorCard icon={Thermometer} label="Soil Temp" value={reading.Soil_Temperature} unit="°C" color="rose" />
-                <SensorCard icon={Droplets} label="Soil Moisture (Cap-1)" value={cap1} unit="%" color="teal" />
-                <SensorCard icon={Droplets} label="Soil Moisture (Cap-2)" value={cap2} unit="%" color="cyan" />
-                <SensorCard icon={Droplets} label="Soil Moisture (Cap-3)" value={cap3} unit="%" color="blue" />
-                <SensorCard icon={Thermometer} label="Air Temp" value={reading.Air_Temperature} unit="°C" color="amber" />
-                <SensorCard icon={Wind} label="Air Humidity" value={reading.Air_Humidity} unit="%" color="indigo" />
+                <SensorCard icon={Droplets} label="soil_moisture_1" value={cap1} unit="%" color="teal" />
+                <SensorCard icon={Droplets} label="soil_moisture_2" value={cap2} unit="%" color="cyan" />
+                <SensorCard icon={Droplets} label="soil_moisture_3" value={cap3} unit="%" color="blue" />
+                <SensorCard icon={Thermometer} label="temperature" value={reading.Soil_Temperature} unit="°C" color="rose" />
+                <SensorCard icon={Wind} label="humidity" value={reading.Air_Humidity} unit="%" color="indigo" />
+                <SensorCard icon={FlaskConical} label="nitrogen" value={reading.Nitrogen} unit="mg/kg" color="green" />
+                <SensorCard icon={FlaskConical} label="phosphorus" value={reading.Phosphorus} unit="mg/kg" color="blue" />
+                <SensorCard icon={FlaskConical} label="potassium" value={reading.Potassium} unit="mg/kg" color="purple" />
+                <SensorCard icon={Droplets} label="pump" value={pumpOn ? 'ON' : 'OFF'} unit="" color={pumpOn ? 'green' : 'amber'} />
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Moisture History Chart */}
-                <DashboardCard title="Moisture History (Current vs Ideal)" className="lg:col-span-2">
+                <DashboardCard title="Moisture History (soil_moisture_1/2/3 average vs ideal)" className="lg:col-span-2">
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={history}>
@@ -486,7 +469,7 @@ export const SoilMonitoring = () => {
                                 <YAxis domain={[10, 90]} tick={{ fontSize: 10 }} stroke="#94a3b8" />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    formatter={(value, name) => [`${value}%`, name === 'current' ? 'Current Moisture' : 'Ideal Moisture']}
+                                    formatter={(value, name) => [`${value}%`, name === 'current' ? 'Current Moisture Average' : 'Ideal Moisture']}
                                 />
                                 <ReferenceLine y={ideal + THRESHOLD} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: 'High', fontSize: 10, fill: '#f59e0b' }} />
                                 <ReferenceLine y={ideal - THRESHOLD} stroke="#ef4444" strokeDasharray="4 4" label={{ value: 'Low', fontSize: 10, fill: '#ef4444' }} />
@@ -562,7 +545,7 @@ export const SoilMonitoring = () => {
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3">
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Data Path</p>
-                            <p className="text-slate-800 font-semibold mt-1 text-xs font-mono">soil_monitoring/</p>
+                            <p className="text-slate-800 font-semibold mt-1 text-xs font-mono">soil_monitoring/latest</p>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3">
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">History Points</p>
@@ -570,7 +553,7 @@ export const SoilMonitoring = () => {
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3">
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Current Mode</p>
-                            <p className="text-slate-800 font-semibold mt-1">{dataSource === 'firebase' ? '🔴 Firebase Live' : '🔵 Simulated'}</p>
+                            <p className="text-slate-800 font-semibold mt-1">{dataSource === 'firebase' ? '🔴 Latest node live' : '🔵 Simulated latest payload'}</p>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3">
                             <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Sync Status</p>
@@ -582,9 +565,9 @@ export const SoilMonitoring = () => {
                     <div className="mt-4 bg-slate-50 rounded-xl p-4">
                         <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-2">How it works</p>
                         <ul className="text-xs text-slate-600 space-y-1.5">
-                            <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">●</span><span><strong>Simulate mode</strong> generates random sensor data every 3s and writes each reading to Firebase.</span></li>
+                            <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">●</span><span><strong>Simulate mode</strong> generates random sensor data every 5s and writes to latest fields.</span></li>
                             <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">●</span><span><strong>Firebase mode</strong> listens for real-time data — connect your Arduino or any IoT device that writes to <code className="bg-white px-1 rounded">soil_monitoring/latest</code>.</span></li>
-                            <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">●</span><span>All readings are stored in <code className="bg-white px-1 rounded">soil_monitoring/history</code> for analysis.</span></li>
+                            <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">●</span><span>The frontend now uses the exact live fields: <code className="bg-white px-1 rounded">soil_moisture_1</code>, <code className="bg-white px-1 rounded">soil_moisture_2</code>, <code className="bg-white px-1 rounded">soil_moisture_3</code>, <code className="bg-white px-1 rounded">temperature</code>, <code className="bg-white px-1 rounded">humidity</code>, <code className="bg-white px-1 rounded">nitrogen</code>, <code className="bg-white px-1 rounded">phosphorus</code>, <code className="bg-white px-1 rounded">potassium</code>, <code className="bg-white px-1 rounded">pump</code>.</span></li>
                         </ul>
                     </div>
                 </DashboardCard>
