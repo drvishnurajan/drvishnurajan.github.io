@@ -343,22 +343,24 @@ export const SoilMonitoring = () => {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                     {/* Data Source Toggle */}
-                    <div className="flex rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                        <button
-                            onClick={() => setDataSource('simulate')}
-                            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all ${dataSource === 'simulate'
-                                ? 'bg-blue-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
-                        >
-                            <Radio size={14} /> Simulate
-                        </button>
-                        <button
-                            onClick={() => setDataSource('firebase')}
-                            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all ${dataSource === 'firebase'
-                                ? 'bg-orange-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
-                        >
-                            <Database size={14} /> Firebase
-                        </button>
-                    </div>
+                    {false && (
+                        <div className="flex rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                            <button
+                                onClick={() => setDataSource('simulate')}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all ${dataSource === 'simulate'
+                                    ? 'bg-blue-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                <Radio size={14} /> Simulate
+                            </button>
+                            <button
+                                onClick={() => setDataSource('firebase')}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all ${dataSource === 'firebase'
+                                    ? 'bg-orange-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                <Database size={14} /> Firebase
+                            </button>
+                        </div>
+                    )}
 
                     {/* Firebase status indicator */}
                     {dataSource === 'firebase' && (
@@ -503,8 +505,8 @@ export const SoilMonitoring = () => {
                 </DashboardCard>
             </div>
 
-            {/* Model Info + Firebase Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Model Info */}
+            <div className="grid grid-cols-1 gap-4">
                 <DashboardCard title="Model Information">
                     <div className="grid grid-cols-2 gap-3 text-sm">
                         <div className="bg-slate-50 rounded-xl p-3">
@@ -534,41 +536,6 @@ export const SoilMonitoring = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
-                </DashboardCard>
-
-                <DashboardCard title="Firebase Realtime Database">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-orange-50 rounded-xl p-3 col-span-2">
-                            <p className="text-orange-600 text-xs font-medium uppercase tracking-wider">Database URL</p>
-                            <p className="text-slate-800 font-semibold mt-1 text-xs break-all">cps-sahrdaya-default-rtdb.firebaseio.com</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Data Path</p>
-                            <p className="text-slate-800 font-semibold mt-1 text-xs font-mono">soil_monitoring/latest</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">History Points</p>
-                            <p className="text-slate-800 font-semibold mt-1">{history.length} / {MAX_HISTORY}</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Current Mode</p>
-                            <p className="text-slate-800 font-semibold mt-1">{dataSource === 'firebase' ? '🔴 Latest node live' : '🔵 Simulated latest payload'}</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">Sync Status</p>
-                            <p className={`font-semibold mt-1 ${dataSource === 'simulate' ? 'text-blue-600' : fbConnected ? 'text-green-600' : 'text-red-500'}`}>
-                                {dataSource === 'simulate' ? 'Writing to DB' : fbConnected ? 'Listening' : 'Disconnected'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-4 bg-slate-50 rounded-xl p-4">
-                        <p className="text-slate-500 text-xs font-medium uppercase tracking-wider mb-2">How it works</p>
-                        <ul className="text-xs text-slate-600 space-y-1.5">
-                            <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">●</span><span><strong>Simulate mode</strong> generates random sensor data every 5s and writes to latest fields.</span></li>
-                            <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">●</span><span><strong>Firebase mode</strong> listens for real-time data — connect your Arduino or any IoT device that writes to <code className="bg-white px-1 rounded">soil_monitoring/latest</code>.</span></li>
-                            <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">●</span><span>The frontend now uses the exact live fields: <code className="bg-white px-1 rounded">soil_moisture_1</code>, <code className="bg-white px-1 rounded">soil_moisture_2</code>, <code className="bg-white px-1 rounded">soil_moisture_3</code>, <code className="bg-white px-1 rounded">temperature</code>, <code className="bg-white px-1 rounded">humidity</code>, <code className="bg-white px-1 rounded">nitrogen</code>, <code className="bg-white px-1 rounded">phosphorus</code>, <code className="bg-white px-1 rounded">potassium</code>, <code className="bg-white px-1 rounded">pump</code>.</span></li>
-                        </ul>
                     </div>
                 </DashboardCard>
             </div>
