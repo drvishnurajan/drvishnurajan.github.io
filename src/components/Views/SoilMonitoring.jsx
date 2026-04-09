@@ -429,6 +429,7 @@ export const SoilMonitoring = () => {
                 <SensorCard icon={Droplets} label="soil_moisture_1" value={cap1} unit="%" color="teal" />
                 <SensorCard icon={Droplets} label="soil_moisture_2" value={cap2} unit="%" color="cyan" />
                 <SensorCard icon={Droplets} label="soil_moisture_3" value={cap3} unit="%" color="blue" />
+                <SensorCard icon={Droplets} label="Predicted Moister" value={avgMoisture} unit="%" color="indigo" />
                 <SensorCard icon={Thermometer} label="temperature" value={reading.Soil_Temperature} unit="°C" color="rose" />
                 <SensorCard icon={Wind} label="humidity" value={reading.Air_Humidity} unit="%" color="indigo" />
                 <SensorCard icon={FlaskConical} label="nitrogen" value={reading.Nitrogen} unit="mg/kg" color="green" />
