@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { HeartPulse, Thermometer, Activity, Users, AlertTriangle } from 'lucide-react';
+import { HeartPulse, Thermometer, Activity, Users, AlertTriangle, Eye, Cpu, Languages, ShieldCheck, Clock3 } from 'lucide-react';
 import { DashboardCard } from '../Shared/DashboardCard';
 import { DemoEncryptionNotice } from '../Shared/DemoEncryptionNotice';
 
@@ -55,6 +55,34 @@ const ZONE_RISK = [
     { zone: 'South', risk: 73 },
     { zone: 'West', risk: 33 },
     { zone: 'Central', risk: 52 }
+];
+
+const DRISHTI_CORE_METRICS = [
+    { label: 'Global Diabetics', value: '463M', icon: Users, tone: 'blue', detail: 'WHO-scale burden addressed' },
+    { label: 'India Diabetics', value: '77M', icon: Activity, tone: 'amber', detail: 'High-need screening population' },
+    { label: 'Preventable Blindness', value: '80%', icon: Eye, tone: 'green', detail: 'With timely detection and care' },
+    { label: 'Per Screen Cost', value: 'Rs 81', icon: ShieldCheck, tone: 'red', detail: 'Village-level operational cost' }
+];
+
+const DRISHTI_WORKFLOW = [
+    { step: '1. Intake', seconds: 45, action: 'ABHA-linked registration and risk profile pull' },
+    { step: '2. Capture', seconds: 90, action: 'IMU-guided fundus capture with stability lock' },
+    { step: '3. QC Check', seconds: 5, action: 'MobileNetV3 image quality accept/reject' },
+    { step: '4. AI Grading', seconds: 3, action: 'DR + glaucoma + AMD + retinal age inference' },
+    { step: '5. Counselling', seconds: 8, action: 'On-device vernacular LLM counselling + TTS' },
+    { step: '6. Referral', seconds: 30, action: 'Referral packet and follow-up scheduling' }
+];
+
+const DRISHTI_MODEL_OPTIONS = [
+    { model: 'EyePACS / KMesa', sensitivity: 87, auc: 0.9, offline: 'No', indiaData: 'Partial' },
+    { model: 'Google Health AI', sensitivity: 90, auc: 0.91, offline: 'Partnership', indiaData: 'Pilot' },
+    { model: 'Aravind / LVPEI', sensitivity: 89, auc: 0.92, offline: 'Yes', indiaData: 'Primary' }
+];
+
+const DRISHTI_ROLLOUT = [
+    { phase: 'Phase 1', timeline: 'Months 1-6', scope: '2 CHCs, 2 units', goal: 'Parallel validation with ophthalmologists' },
+    { phase: 'Phase 2', timeline: 'Months 7-18', scope: '20 PHCs district-wide', goal: 'Referral corridor and federated learning' },
+    { phase: 'Phase 3', timeline: 'State Integration', scope: 'NHM + NPCDCS', goal: 'ABHA sync and statewide procurement' }
 ];
 
 const symptomsBreakup = (rows) => {
@@ -219,6 +247,120 @@ export const HealthDashboard = () => {
                         </table>
                     </div>
                 </DashboardCard>
+            </div>
+
+            {/* DRISHTI Blueprint Section (merged below existing health dashboard) */}
+            <div className="pt-2 space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-emerald-50 p-5">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <Eye size={20} className="text-blue-600" />
+                        DRISHTI Blueprint Dashboard
+                    </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {DRISHTI_CORE_METRICS.map((metric) => (
+                        <div key={metric.label} className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">{metric.label}</p>
+                                    <p className="mt-1 text-2xl font-bold text-slate-800">{metric.value}</p>
+                                    <p className="text-xs text-slate-500 mt-1">{metric.detail}</p>
+                                </div>
+                                <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${metric.tone === 'blue'
+                                    ? 'bg-blue-50 border-blue-100 text-blue-600'
+                                    : metric.tone === 'green'
+                                        ? 'bg-green-50 border-green-100 text-green-600'
+                                        : metric.tone === 'amber'
+                                            ? 'bg-amber-50 border-amber-100 text-amber-600'
+                                            : 'bg-red-50 border-red-100 text-red-600'}`}>
+                                    <metric.icon size={18} />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <DashboardCard title="4-Minute Screening Workflow" className="xl:col-span-2">
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={DRISHTI_WORKFLOW} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                    <XAxis dataKey="step" tick={{ fontSize: 10 }} stroke="#64748b" interval={0} angle={-20} textAnchor="end" height={52} />
+                                    <YAxis tick={{ fontSize: 11 }} stroke="#64748b" width={36} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: 12 }}
+                                        formatter={(value) => [`${value}s`, 'Time']}
+                                        labelFormatter={(label, payload) => {
+                                            const item = payload?.[0]?.payload;
+                                            return `${label} - ${item?.action || ''}`;
+                                        }}
+                                    />
+                                    <Bar dataKey="seconds" fill="#0ea5e9" radius={[6, 6, 0, 0]} barSize={28} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </DashboardCard>
+
+                    <DashboardCard title="Technology Stack Signals">
+                        <div className="space-y-3 text-sm">
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="font-semibold text-slate-700 flex items-center gap-2"><Cpu size={14} /> On-device AI</p>
+                                <p className="text-slate-600 mt-1">EfficientNet-B3 multi-task inference in ~2.6s with offline execution.</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="font-semibold text-slate-700 flex items-center gap-2"><Languages size={14} /> Vernacular Counselling</p>
+                                <p className="text-slate-600 mt-1">Gemma-2 2B INT4 messaging for local-language patient guidance.</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="font-semibold text-slate-700 flex items-center gap-2"><Clock3 size={14} /> Camp Throughput</p>
+                                <p className="text-slate-600 mt-1">Designed for 30+ patients per camp day without cloud dependency.</p>
+                            </div>
+                        </div>
+                    </DashboardCard>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <DashboardCard title="AI Model Options" className="xl:col-span-2">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                                <thead>
+                                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                                        <th className="py-2 pr-3 font-semibold">Model</th>
+                                        <th className="py-2 pr-3 font-semibold">Sensitivity</th>
+                                        <th className="py-2 pr-3 font-semibold">AUC</th>
+                                        <th className="py-2 pr-3 font-semibold">Offline</th>
+                                        <th className="py-2 font-semibold">India Data Fit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {DRISHTI_MODEL_OPTIONS.map((m) => (
+                                        <tr key={m.model} className="border-b border-slate-100 text-slate-700">
+                                            <td className="py-2 pr-3 font-medium">{m.model}</td>
+                                            <td className="py-2 pr-3">{m.sensitivity}%</td>
+                                            <td className="py-2 pr-3">{m.auc.toFixed(2)}</td>
+                                            <td className="py-2 pr-3">{m.offline}</td>
+                                            <td className="py-2">{m.indiaData}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </DashboardCard>
+
+                    <DashboardCard title="Rollout Roadmap">
+                        <div className="space-y-2">
+                            {DRISHTI_ROLLOUT.map((phase) => (
+                                <div key={phase.phase} className="rounded-xl border border-slate-200 p-3 bg-white">
+                                    <p className="text-sm font-semibold text-slate-700">{phase.phase} <span className="text-slate-500 font-normal">({phase.timeline})</span></p>
+                                    <p className="text-xs text-slate-500 mt-1">{phase.scope}</p>
+                                    <p className="text-xs text-slate-600 mt-1">{phase.goal}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </DashboardCard>
+                </div>
             </div>
         </div>
     );
